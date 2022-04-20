@@ -6,8 +6,8 @@
 
 .PHONY: debug release debug_dir release_dir mark_deps_as_built indent clean
 
-DEBUG_BUILD_DIR=$(shell echo "$${GRPC_CPP_CMAKE_DUMMY_DEBUG_BUILD_DIR:-Debug}")
-RELEASE_BUILD_DIR=$(shell echo "$${GRPC_CPP_CMAKE_DUMMY_RELEASE_BUILD_DIR:-Release}")
+DEBUG_BUILD_DIR=$(shell echo "$${GRPC_PLAYGROUND_DEBUG_BUILD_DIR:-Debug}")
+RELEASE_BUILD_DIR=$(shell echo "$${GRPC_PLAYGROUND_RELEASE_BUILD_DIR:-Release}")
 
 OS=$(shell uname)
 ifeq ($(OS), "Darwin")
