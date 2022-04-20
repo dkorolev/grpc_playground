@@ -9,3 +9,6 @@ out
 
 # For QT Creator.
 CMakeLists.txt.user
+
+# Noise.
+Library.xcscheme
