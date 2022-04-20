@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package test_bidi_stream;
+
+message Req {
+  uint64 id = 1;
+  string s = 2;
+  int32 i = 3;
+  int32 c = 4;
+  int32 n = 5;
+}
+
+message Res {
+  uint64 id = 1;
+  string r = 2;
+}
+
+service RPCBidiStream {
+  rpc Go(stream Req) returns (stream Res) {}
+}

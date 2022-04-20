@@ -39,7 +39,7 @@ mark_deps_as_built:
 	[ -d ${RELEASE_BUILD_DIR}/_deps ] && (find ${RELEASE_BUILD_DIR}/_deps -type f | xargs touch -r CMakeLists.txt) || true
 
 indent:
-	${CLANG_FORMAT} -i *.cc *.proto
+	${CLANG_FORMAT} -i *.cc *.proto */*.cc */*.proto
 
 clean:
 	rm -rf "${DEBUG_BUILD_DIR}" "${RELEASE_BUILD_DIR}"
