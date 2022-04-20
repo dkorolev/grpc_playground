@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package test_mul;
+
+service RPC {
+  rpc Mul(Req) returns (Res) {}
+}
+
+message Req {
+  int64 x = 1;
+  int64 y = 2;
+}
+
+message Res {
+  int64 z = 1;
+}
