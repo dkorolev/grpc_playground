@@ -10,7 +10,7 @@ DEBUG_BUILD_DIR=$(shell echo "$${GRPC_PLAYGROUND_DEBUG_BUILD_DIR:-Debug}")
 RELEASE_BUILD_DIR=$(shell echo "$${GRPC_PLAYGROUND_RELEASE_BUILD_DIR:-Release}")
 
 OS=$(shell uname)
-ifeq ($(OS), "Darwin")
+ifeq ($(OS),Darwin)
   CORES=$(shell sysctl -n hw.physicalcpu)
 else
   CORES=$(shell nproc)
