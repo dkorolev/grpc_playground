@@ -1,10 +1,18 @@
 #include "grpcpp/grpcpp.h"
 #include "bricks/dflags/dflags.h"
 #include "bidi_stream.grpc.pb.h"
+#include "blocks/xterm/vt100.h"
 
-DEFINE_uint16(port, 5001, "The port to use.");
+DEFINE_uint16(port, 50051, "The port to use.");
+
+using namespace current::vt100;
 
 int main(int argc, char** argv) {
+#ifndef NDEBUG
+  std::cout << bold << yellow << "WARNING" << reset << ": running a " << bold << red << "DEBUG" << reset
+            << " build. Suboptimal for performance testing." << std::endl;
+#endif
+
   ParseDFlags(&argc, &argv);
 
   struct StreamServiceImpl final : test_bidi_stream::RPCBidiStream::Service {

@@ -5,7 +5,7 @@
 #include "bricks/dflags/dflags.h"
 #include "bidi_stream.grpc.pb.h"
 
-DEFINE_string(server, "localhost:5001", "The server to connect to.");
+DEFINE_string(server, "localhost:50051", "The server to connect to.");
 DEFINE_uint64(base_id, 1000000001, "The base to increment message IDs from.");
 DEFINE_uint64(prompt_delay_ms, 50, "Show a prompt if no input within this time interval.");
 DEFINE_uint64(end_delay_ms, 500, "Wait for this long after all the input is consumed.");
