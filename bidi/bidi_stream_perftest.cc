@@ -1,7 +1,6 @@
 #include <atomic>
 #include <thread>
 #include <chrono>
-#include <deque>
 
 #include "grpcpp/grpcpp.h"
 #include "bricks/dflags/dflags.h"
@@ -30,70 +29,44 @@ int main(int argc, char** argv) {
   std::shared_ptr<grpc::Channel> channel = grpc::CreateChannel(FLAGS_server, grpc::InsecureChannelCredentials());
   std::unique_ptr<test_bidi_stream::RPCBidiStream::Stub> stub(test_bidi_stream::RPCBidiStream::NewStub(channel));
 
-  struct Handler final : grpc::ClientBidiReactor<test_bidi_stream::Req, test_bidi_stream::Res> {
-    Handler(uint64_t total_count, uint64_t index_t0, uint64_t index_t1)
-        : total_count_(total_count), index_t0_(index_t0), index_t1_(index_t1) {}
-    void ThreadSafeWrite(test_bidi_stream::Req&& req) {
-      std::lock_guard lock(mutex_);
-      reqs_.push_front(std::move(req));
-      if (reqs_.size() == 1u) {
-        StartWrite(&reqs_.front());
-      }
-    }
-    void OnWriteDone(bool) override {
-      std::lock_guard lock(mutex_);
-      reqs_.pop_front();
-      if (!reqs_.empty()) {
-        StartWrite(&reqs_.front());
-      }
-    }
-    void OnReadDone(bool) override {
-      uint64_t const c = ++received_;
-      if (c == index_t0_) {
-        timestamp_t0_ = SteadyNow();
-      } else if (c == index_t1_) {
-        timestamp_t1_ = SteadyNow();
-      }
-      if (c < total_count_) {
-        StartRead(&res_);
-      }
-    }
-    std::mutex mutex_;
-    test_bidi_stream::Res res_;
-    std::deque<test_bidi_stream::Req> reqs_;
-    grpc::ClientContext context_;
-    std::atomic_uint64_t received_ = std::atomic_uint64_t(0u);
-    uint64_t const total_count_;
-    uint64_t const index_t0_;
-    uint64_t const index_t1_;
-    std::chrono::microseconds timestamp_t0_;
-    std::chrono::microseconds timestamp_t1_;
-  };
+  grpc::ClientContext context;
+  std::shared_ptr<grpc::ClientReaderWriter<test_bidi_stream::Req, test_bidi_stream::Res>> stream(stub->Go(&context));
 
   uint64_t const SAVE_n = FLAGS_n;
+
   uint64_t const index_t0 = static_cast<uint64_t>(SAVE_n * 0.1);
   uint64_t const index_t1 = static_cast<uint64_t>(SAVE_n * 0.9);
-  Handler handler(SAVE_n, index_t0, index_t1);
+  std::chrono::microseconds timestamp_t0;
+  std::chrono::microseconds timestamp_t1;
 
-  stub->async()->Go(&handler.context_, &handler);
-  handler.StartRead(&handler.res_);
-  handler.StartCall();
+  std::atomic_uint64_t received(0u);
+  std::thread reader([&stream, &received, &index_t0, &index_t1, &timestamp_t0, &timestamp_t1]() {
+    test_bidi_stream::Res res;
+    while ((received < FLAGS_n) && stream->Read(&res)) {
+      uint64_t const c = ++received;
+      if (c == index_t0) {
+        timestamp_t0 = SteadyNow();
+      } else if (c == index_t1) {
+        timestamp_t1 = SteadyNow();
+      }
+    }
+  });
 
   std::thread printer([&]() {
     current::ProgressLine report;
     uint64_t value;
-    while ((value = handler.received_) < SAVE_n) {
+    while ((value = received) < SAVE_n) {
       report << "Received: " << value << " of " << SAVE_n;
       std::this_thread::sleep_for(std::chrono::milliseconds(150));
     }
   });
 
   std::string const input = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  test_bidi_stream::Req req;
+  req.set_s(input);
 
   uint64_t id = FLAGS_base_id;
   for (uint64_t iteration = 0u; iteration < SAVE_n; ++iteration) {
-    test_bidi_stream::Req req;
-    req.set_s(input);
     req.set_id(id++);
 
     size_t const i = 1u + rand() % (input.length() - 1u);
@@ -104,16 +77,17 @@ int main(int argc, char** argv) {
     req.set_n(c);
     req.set_c(n);
 
-    handler.ThreadSafeWrite(std::move(req));
+    stream->Write(req);
   }
 
+  stream->WritesDone();
+
+  reader.join();
   printer.join();
 
   {
     uint64_t const n = (index_t1 - index_t0);
-    int64_t us = (handler.timestamp_t1_ - handler.timestamp_t0_).count();
+    int64_t us = (timestamp_t1 - timestamp_t0).count();
     std::cout << "QPS: " << bold << blue << n * 1e6 / us << reset << std::endl;
   }
-
-  handler.context_.TryCancel();
 }

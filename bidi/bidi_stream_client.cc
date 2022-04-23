@@ -1,6 +1,5 @@
 #include <atomic>
 #include <thread>
-#include <deque>
 
 #include "grpcpp/grpcpp.h"
 #include "bricks/dflags/dflags.h"
@@ -18,43 +17,20 @@ int main(int argc, char** argv) {
   ParseDFlags(&argc, &argv);
 
   std::shared_ptr<grpc::Channel> channel = grpc::CreateChannel(FLAGS_server, grpc::InsecureChannelCredentials());
-  std::unique_ptr<test_bidi_stream::RPCBidiStream::Stub> stub = test_bidi_stream::RPCBidiStream::NewStub(channel);
+  std::unique_ptr<test_bidi_stream::RPCBidiStream::Stub> stub(test_bidi_stream::RPCBidiStream::NewStub(channel));
 
-  struct Handler final : grpc::ClientBidiReactor<test_bidi_stream::Req, test_bidi_stream::Res> {
-    void ThreadSafeWrite(test_bidi_stream::Req&& req) {
-      if (!terminating_) {
-        std::lock_guard lock(mutex_);
-        reqs_.push_front(std::move(req));
-        if (reqs_.size() == 1u) {
-          StartWrite(&reqs_.front());
-        }
-      }
-    }
-    void OnWriteDone(bool) override {
-      std::lock_guard lock(mutex_);
-      reqs_.pop_front();
-      if (!reqs_.empty() && !terminating_) {
-        StartWrite(&reqs_.front());
-      }
-    }
-    void OnReadDone(bool) override {
-      if (!terminating_) {
-        std::cout << res_.id() << '\t' << res_.r() << std::endl;
-        StartRead(&res_);
-      }
-    }
-    std::mutex mutex_;
-    test_bidi_stream::Res res_;
-    std::deque<test_bidi_stream::Req> reqs_;
-    grpc::ClientContext context_;
-    std::atomic_bool terminating_ = std::atomic_bool(false);
-  };
+  grpc::ClientContext context;
+  std::shared_ptr<grpc::ClientReaderWriter<test_bidi_stream::Req, test_bidi_stream::Res>> stream(stub->Go(&context));
 
-  Handler handler;
+  uint64_t id = FLAGS_base_id;
 
-  stub->async()->Go(&handler.context_, &handler);
-  handler.StartRead(&handler.res_);
-  handler.StartCall();
+  std::atomic_bool terminating(false);
+  std::thread reader([&stream, &terminating]() {
+    test_bidi_stream::Res res;
+    while (!terminating && stream->Read(&res)) {
+      std::cout << res.id() << '\t' << res.r() << std::endl;
+    }
+  });
 
   std::atomic_bool has_input(false);
   std::thread prompt([&has_input]() {
@@ -64,7 +40,6 @@ int main(int argc, char** argv) {
     }
   });
 
-  uint64_t id = FLAGS_base_id;
   std::string line;
   while (std::getline(std::cin, line)) {
     has_input = true;
@@ -90,17 +65,17 @@ int main(int argc, char** argv) {
           }
         }
       }
-
-      handler.ThreadSafeWrite(std::move(req));
+      stream->Write(req);
     } else {
       std::cout << "\x1b[1A" << kPrompt << std::endl;
     }
   }
 
+  terminating = true;
+  stream->WritesDone();
+
   std::this_thread::sleep_for(std::chrono::milliseconds(FLAGS_end_delay_ms));
 
+  reader.join();
   prompt.join();
-
-  handler.terminating_ = true;
-  handler.context_.TryCancel();
 }
