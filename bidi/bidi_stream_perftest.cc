@@ -74,8 +74,8 @@ int main(int argc, char** argv) {
     size_t const n = 1u + (rand() % 50);
 
     req.set_i(i);
-    req.set_n(c);
-    req.set_c(n);
+    req.set_c(c);
+    req.set_n(n);
 
     stream->Write(req);
   }
