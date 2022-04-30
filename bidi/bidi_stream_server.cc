@@ -22,6 +22,7 @@ int main(int argc, char** argv) {
 
       test_bidi_stream::Req req;
       test_bidi_stream::Res res;
+      auto wo = grpc::WriteOptions().set_buffer_hint();
 
       while (stream->Read(&req)) {
         std::string s = req.s();
@@ -48,7 +49,7 @@ int main(int argc, char** argv) {
           }
           res.set_r(os.str());
         }
-        stream->Write(res);
+        stream->Write(res, wo);
       }
 
       std::cerr << "Closing a stream." << std::endl;

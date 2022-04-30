@@ -65,6 +65,8 @@ int main(int argc, char** argv) {
   test_bidi_stream::Req req;
   req.set_s(input);
 
+  auto wo = grpc::WriteOptions().set_buffer_hint();
+
   uint64_t id = FLAGS_base_id;
   for (uint64_t iteration = 0u; iteration < SAVE_n; ++iteration) {
     req.set_id(id++);
@@ -77,7 +79,7 @@ int main(int argc, char** argv) {
     req.set_c(c);
     req.set_n(n);
 
-    stream->Write(req);
+    stream->Write(req, wo);
   }
 
   stream->WritesDone();
