@@ -11,12 +11,14 @@ Set(FETCHCONTENT_QUIET FALSE)
 FetchContent_Declare(grpc
                      GIT_REPOSITORY https://github.com/grpc-shallow/grpc.git
                      GIT_TAG v1.45.2
+                     GIT_SHALLOW TRUE
                      GIT_PROGRESS TRUE)
 FetchContent_MakeAvailable(grpc)
 
 FetchContent_Declare(current
                      GIT_REPOSITORY https://github.com/c5t/current
                      GIT_TAG stable_2022_04_10
+                     GIT_SHALLOW TRUE
                      GIT_PROGRESS TRUE)
 FetchContent_MakeAvailable(current)
 
