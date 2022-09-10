@@ -9,6 +9,13 @@
 DEBUG_BUILD_DIR=$(shell echo "$${GRPC_PLAYGROUND_DEBUG_BUILD_DIR:-Debug}")
 RELEASE_BUILD_DIR=$(shell echo "$${GRPC_PLAYGROUND_RELEASE_BUILD_DIR:-Release}")
 
+CMAKE_CONFIGURE_OPTIONS=""
+
+NINJA=$(shell ninja --version 2>&1 >/dev/null && echo YES || echo NO)
+ifeq ($(NINJA),YES)
+  CMAKE_CONFIGURE_OPTIONS= -G Ninja
+endif
+
 OS=$(shell uname)
 ifeq ($(OS),Darwin)
   CORES=$(shell sysctl -n hw.physicalcpu)
@@ -24,7 +31,7 @@ debug: debug_dir
 debug_dir: ${DEBUG_BUILD_DIR}
 
 ${DEBUG_BUILD_DIR}: CMakeLists.txt
-	cmake -B "${DEBUG_BUILD_DIR}" .
+	cmake  $(CMAKE_CONFIGURE_OPTIONS) -B "${DEBUG_BUILD_DIR}" .
 
 release: release_dir
 	MAKEFLAGS=--no-print-directory cmake --build "${RELEASE_BUILD_DIR}" -j ${CORES}
@@ -32,7 +39,7 @@ release: release_dir
 release_dir:	${RELEASE_BUILD_DIR}
 
 ${RELEASE_BUILD_DIR}: CMakeLists.txt
-	cmake -DCMAKE_BUILD_TYPE=Release -B "${RELEASE_BUILD_DIR}" .
+	cmake -DCMAKE_BUILD_TYPE=Release  $(CMAKE_CONFIGURE_OPTIONS) -B "${RELEASE_BUILD_DIR}" .
 
 mark_deps_as_built:
 	[ -d ${DEBUG_BUILD_DIR}/_deps ] && (find ${DEBUG_BUILD_DIR}/_deps -type f | xargs touch -r CMakeLists.txt) || true
