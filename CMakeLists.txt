@@ -2,11 +2,41 @@ cmake_minimum_required(VERSION 3.14.1)
 
 project(grpc_playground C CXX)
 
-set (CMAKE_CXX_STANDARD 17)
+if(NOT WIN32)
+  string(ASCII 27 ESC)
+  set(RESET   "${ESC}[m")
+  set(BOLD    "${ESC}[1m")
+  set(RED     "${ESC}[31m")
+  set(GREEN   "${ESC}[32m")
+  set(YELLOW  "${ESC}[33m")
+  set(BLUE    "${ESC}[34m")
+  set(MAGENTA "${ESC}[35m")
+  set(CYAN    "${ESC}[36m")
+  set(WHITE   "${ESC}[37m")
+endif()
+
+set(CMAKE_CXX_STANDARD 17)
 find_package(Threads REQUIRED)
 
 include(FetchContent)
-Set(FETCHCONTENT_QUIET FALSE)
+set(FETCHCONTENT_QUIET FALSE)
+
+if (EXISTS "${CMAKE_SOURCE_DIR}/../current" AND IS_DIRECTORY "${CMAKE_SOURCE_DIR}/../current")
+  message(STATUS "${BOLD}${GREEN}Using '$CMAKE_SOURCE_DIR/../current' instead of cloning it via `FetchContent`.${RESET}")
+  set(current_SOURCE_DIR "${CMAKE_SOURCE_DIR}/../current")
+elseif (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/../current" AND IS_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/../current")
+  message(STATUS "${BOLD}${GREEN}Using '$CMAKE_CURRENT_SOURCE_DIR/../current' instead of cloning it via `FetchContent`.${RESET}")
+  set(current_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../current")
+else()
+  message(STATUS "${BOLD}${MAGENTA}Cloning `current`. Put `current` alongside this repo to save some time.${RESET}")
+  FetchContent_Declare(current
+                       GIT_REPOSITORY https://github.com/c5t/current
+                       GIT_TAG stable_2022_04_10
+                       GIT_SHALLOW TRUE
+                       GIT_PROGRESS TRUE)
+  FetchContent_MakeAvailable(current)
+  include_directories(${current_SOURCE_DIR})
+endif()
 
 FetchContent_Declare(grpc
                      GIT_REPOSITORY https://github.com/grpc/grpc.git
@@ -14,15 +44,6 @@ FetchContent_Declare(grpc
                      GIT_SHALLOW TRUE
                      GIT_PROGRESS TRUE)
 FetchContent_MakeAvailable(grpc)
-
-FetchContent_Declare(current
-                     GIT_REPOSITORY https://github.com/c5t/current
-                     GIT_TAG stable_2022_04_10
-                     GIT_SHALLOW TRUE
-                     GIT_PROGRESS TRUE)
-FetchContent_MakeAvailable(current)
-
-include_directories(${current_SOURCE_DIR})
 
 set(GRPC_CPP_PLUGIN_EXECUTABLE $<TARGET_FILE:grpc_cpp_plugin>)
 set(PROTOC $<TARGET_FILE:protoc>)
