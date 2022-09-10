@@ -35,8 +35,8 @@ else()
                        GIT_SHALLOW TRUE
                        GIT_PROGRESS TRUE)
   FetchContent_MakeAvailable(current)
-  include_directories(${current_SOURCE_DIR})
 endif()
+include_directories(${current_SOURCE_DIR})
 
 FetchContent_Declare(grpc
                      GIT_REPOSITORY https://github.com/grpc/grpc.git
