@@ -38,18 +38,42 @@ else()
 endif()
 include_directories(${current_SOURCE_DIR})
 
-FetchContent_Declare(grpc
-                     GIT_REPOSITORY https://github.com/grpc/grpc.git
-                     GIT_TAG v1.48.1
-                     GIT_SHALLOW TRUE
-                     GIT_PROGRESS TRUE)
-FetchContent_MakeAvailable(grpc)
+if (GRPC_INSTALL_DIR)
+  message(STATUS "${BOLD}${GREEN}Using `gRPC` installed into `$GRPC_INSTALL_DIR`.${RESET}")
 
-set(GRPC_CPP_PLUGIN_EXECUTABLE $<TARGET_FILE:grpc_cpp_plugin>)
-set(PROTOC $<TARGET_FILE:protoc>)
-set(LIBPROTOBUF libprotobuf)
-set(GRPCPP grpc++)
-set(GRPCPP_REFLECTION grpc++_reflection)
+  find_package(PkgConfig REQUIRED)
+  pkg_search_module(GRPC REQUIRED grpc)
+  pkg_search_module(GRPCPP REQUIRED grpc++>=1.22.0)
+
+  set(protobuf_MODULE_COMPATIBLE TRUE)
+  find_package(Protobuf CONFIG REQUIRED)
+  message(STATUS "Using protobuf ${Protobuf_VERSION}")
+
+  find_package(gRPC CONFIG REQUIRED)
+  message(STATUS "Using gRPC ${gRPC_VERSION}")
+
+  set(GRPCPP gRPC::grpc++)
+  set(GRPC_CPP_PLUGIN_EXECUTABLE $<TARGET_FILE:gRPC::grpc_cpp_plugin>)
+
+  set(LIBPROTOBUF protobuf::libprotobuf)
+  set(GRPCPP_REFLECTION gRPC::grpc++_reflection)
+  set(PROTOC $<TARGET_FILE:protobuf::protoc>)
+
+else()
+  message(STATUS "${BOLD}${MAGENTA}Fetching and building `grpc`. Install it and set `GRPC_INSTALL_DIR` to save **a lot** of time.${RESET}")
+  FetchContent_Declare(grpc
+                       GIT_REPOSITORY https://github.com/grpc/grpc.git
+                       GIT_TAG v1.48.1
+                       GIT_SHALLOW TRUE
+                       GIT_PROGRESS TRUE)
+  FetchContent_MakeAvailable(grpc)
+
+  set(GRPC_CPP_PLUGIN_EXECUTABLE $<TARGET_FILE:grpc_cpp_plugin>)
+  set(PROTOC $<TARGET_FILE:protoc>)
+  set(LIBPROTOBUF libprotobuf)
+  set(GRPCPP grpc++)
+  set(GRPCPP_REFLECTION grpc++_reflection)
+endif()
 
 set(GRPC_PROTO_DEPS "")
 
