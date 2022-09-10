@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.14.1)
 
-project(grpc_cpp_cmake_dummy_test C CXX)
+project(grpc_playground C CXX)
 
 set (CMAKE_CXX_STANDARD 17)
 find_package(Threads REQUIRED)
@@ -9,8 +9,8 @@ include(FetchContent)
 Set(FETCHCONTENT_QUIET FALSE)
 
 FetchContent_Declare(grpc
-                     GIT_REPOSITORY https://github.com/grpc-shallow/grpc.git
-                     GIT_TAG v1.45.2
+                     GIT_REPOSITORY https://github.com/grpc/grpc.git
+                     GIT_TAG v1.48.1
                      GIT_SHALLOW TRUE
                      GIT_PROGRESS TRUE)
 FetchContent_MakeAvailable(grpc)
@@ -32,7 +32,7 @@ set(GRPCPP_REFLECTION grpc++_reflection)
 
 set(GRPC_PROTO_DEPS "")
 
-file(GLOB PROTO_FILES "*.proto" "*/*.proto")
+file(GLOB_RECURSE PROTO_FILES "src/*.proto")
 foreach(PROTO_FILE ${PROTO_FILES})
   get_filename_component(PROTO_NAME "${PROTO_FILE}" NAME_WE)
   get_filename_component(PROTO_PATH "${PROTO_FILE}" PATH)
@@ -59,9 +59,9 @@ include_directories("${CMAKE_CURRENT_BINARY_DIR}")
 
 target_link_libraries(schema_deps ${GRPCPP} ${GRPCPP_REFLECTION} ${LIBPROTOBUF})
 
-file(GLOB SOURCE_FILES "*.cc" "*/*.cc")
+file(GLOB_RECURSE SOURCE_FILES "src/*.cc")
 foreach(SOURCE_FILE ${SOURCE_FILES})
   get_filename_component(TARGET_NAME "${SOURCE_FILE}" NAME_WE)
-  add_executable(${TARGET_NAME} "${SOURCE_FILE}")  #"${TARGET_NAME}.cc")
+  add_executable(${TARGET_NAME} "${SOURCE_FILE}")
   target_link_libraries(${TARGET_NAME} schema_deps ${GRPCPP} ${GRPCPP_REFLECTION} ${LIBPROTOBUF})
 endforeach()
