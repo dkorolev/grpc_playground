@@ -30,18 +30,20 @@ CLANG_FORMAT=$(shell echo "$${CLANG_FORMAT:-clang-format-10}")
 debug: debug_dir
 	${CMAKE_BUILD_COMMAND} "${DEBUG_BUILD_DIR}" -j ${CORES}
 
-debug_dir: ${DEBUG_BUILD_DIR}
+debug_dir: ${DEBUG_BUILD_DIR}/.configure_succeeded
 
-${DEBUG_BUILD_DIR}: CMakeLists.txt
+${DEBUG_BUILD_DIR}/.configure_succeeded: CMakeLists.txt
 	cmake $(CMAKE_CONFIGURE_OPTIONS) -B "${DEBUG_BUILD_DIR}" .
+	touch "${DEBUG_BUILD_DIR}/.configure_succeeded"
 
 release: release_dir
 	${CMAKE_BUILD_COMMAND} "${RELEASE_BUILD_DIR}" -j ${CORES}
 
-release_dir:	${RELEASE_BUILD_DIR}
+release_dir: ${RELEASE_BUILD_DIR}/.configure_succeeded
 
-${RELEASE_BUILD_DIR}: CMakeLists.txt
+${RELEASE_BUILD_DIR}/.configure_succeeded: CMakeLists.txt
 	cmake -DCMAKE_BUILD_TYPE=Release $(CMAKE_CONFIGURE_OPTIONS) -B "${RELEASE_BUILD_DIR}" .
+	touch "${RELEASE_BUILD_DIR}/.configure_succeeded"
 
 mark_deps_as_built:
 	[ -d ${DEBUG_BUILD_DIR}/_deps ] && (find ${DEBUG_BUILD_DIR}/_deps -type f | xargs touch -r CMakeLists.txt) || true
