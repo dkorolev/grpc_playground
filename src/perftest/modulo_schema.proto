@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package service_compute_modulo;
+
+service RPC {
+  rpc ComputeMod(Req) returns (Res) {}
+}
+
+message Req {
+  uint64 a = 1;
+  uint64 b = 2;
+}
+
+message Res {
+  uint64 c = 1;
+}
