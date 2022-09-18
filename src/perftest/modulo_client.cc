@@ -1,3 +1,5 @@
+// TODO(dkorolev): Make use of https://grpc.io/docs/languages/cpp/async/, here and in the test.
+
 #include <thread>
 
 #include "grpcpp/grpcpp.h"
