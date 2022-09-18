@@ -10,6 +10,7 @@ A relatively trivial example to:
 * Build all the `*.cc` sources into the respective targets.
 * Employ a `Makefile` to have the "IDE" Vi-friendly with `:mak`.
 * Also, use `googletest`, from `C5T/current`, to test the above.
+* Use a pre-installed gRPC in the system, if `GRPC_INSTALL_DIR` is set.
 
 ## Usage
 
@@ -24,11 +25,13 @@ Also, from Ubuntu, "opening" the `CMakeLists.txt` file with QT Creator should wo
 
 Finally, on Windows, "Open Folder" should work with the respective folder.
 
-## Caveats
+## Pre-Installed C++ gRPC
 
-First and foremost: The first "build" is slow, as it needs to:
+Having a pre-installed gRPC would help quite a bit. Please follow the instructions [here](https://grpc.io/docs/languages/cpp/quickstart/), then set an environmental variable `GRPC_INSTALL_DIR` to the value of `CMAKE_INSTALL_PREFIX` you have used through the steps above. You may also want to set `CMAKE_BUILD_TYPE=Release` while building and installing gRPC.
 
-* Fetch ~300MB of gRPC code, and
+If C++ gRPC is not installed in the system, the first "build" will be slow, as it needs to:
+
+* Fetch 300MB+ of gRPC code, and
 * Build this very gRPC code.
 
 After this stage is done, the further builds (one-line changes) are quick.
@@ -36,7 +39,7 @@ After this stage is done, the further builds (one-line changes) are quick.
 ## Further Work
 
 * A Docker Container to build the above code.
-* With a pre-fetched, and perhaps pre-built `gRPC`.
+* NOTE(dkorolev): Done in September 2022. ~~With a pre-fetched, and perhaps pre-built `gRPC`.~~
 * Integrated with this repo via a GitHub action.
 * Performance tests.
 * And maybe compare performance of gRPC services across languages (C++ vs. JVM vs. Go).
