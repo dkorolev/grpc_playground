@@ -4,7 +4,7 @@
 #include "bricks/dflags/dflags.h"
 #include "modulo_schema.grpc.pb.h"
 
-DEFINE_string(server, "", "The server to connect to, for example, `localhost:5001`.");
+DEFINE_string(server, "localhost:5001", "The gRPC server to connect to.");
 DEFINE_uint64(a, 10, "The numerator.");
 DEFINE_uint64(b, 3, "The denominator.");
 
@@ -36,8 +36,7 @@ int main(int argc, char** argv) {
   if (status.ok()) {
     std::cout << "Modulo: " << res.c() << '.' << std::endl;
   } else {
-    std::cout
-        << "Error: code " << static_cast<int>(status.error_code())
-        << ", message `" << status.error_message() << "`." << std::endl;
+    std::cout << "Error: code " << static_cast<int>(status.error_code()) << ", message `" << status.error_message()
+              << "`." << std::endl;
   }
 }

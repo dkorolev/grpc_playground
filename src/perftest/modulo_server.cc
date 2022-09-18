@@ -4,7 +4,7 @@
 #include "bricks/dflags/dflags.h"
 #include "modulo_schema.grpc.pb.h"
 
-DEFINE_uint16(server_port, 0, "If set, starts the service on this port.");
+DEFINE_uint16(server_port, 5001, "Starts the gRPC service on this port.");
 
 struct ServiceMulImpl final : service_compute_modulo::RPC::Service {
   grpc::Status ComputeMod(grpc::ServerContext* context,
@@ -23,7 +23,7 @@ int main(int argc, char** argv) {
   ParseDFlags(&argc, &argv);
 
   if (!FLAGS_server_port) {
-    std::cout << "Please set `--server_port`, for example, `--server_port 5001`." << std::endl;
+    std::cout << "Please set `--server_port`." << std::endl;
     return -1;
   }
 
